@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_URL, axiosDB } from '@/js/api'
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -23,17 +24,6 @@ const validate = () => {
     login: '',
     password: '',
   }
-
-  if (!form.value.login.trim()) {
-    errors.value.login = 'Логин незаполнен'
-    isValid = false
-  }
-  
-  if (!form.value.password) {
-    errors.value.password = 'Пароль незаполнен'
-    isValid = false
-  }
-
   return isValid
 }
 
@@ -45,17 +35,18 @@ const submitForm = async () => {
   successMessage.value = ''
 
   try {
-    // Здесь будет реальный API-запрос
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const response = await axiosDB.post(API_URL + '/user', form.value)
     
-    successMessage.value = 'Вход успешен! Перенаправляем...'
-    setTimeout(() => router.push('/'), 2000)
-  } catch (error) {
-    errorMessage.value = 'Ошибка входа: ' + error.message
-  } finally {
-    isLoading.value = false
+    // Сохраняем токен
+    localStorage.setItem('authToken', response.data.token)
+    
+    // Перенаправляем на защищенную страницу
+    router.push('/chat')
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || 'Ошибка входа'
   }
 }
+
 </script>
 
 <template>
@@ -75,7 +66,7 @@ const submitForm = async () => {
         <span class="input-group-text">
             <i class="bi bi-person-circle"></i>
         </span>
-        <input type="text" class="form-control" placeholder="Логин" v-model="form.login" required>
+        <input id="login" type="text" class="form-control" placeholder="Логин" v-model="form.login" required>
       </div>
 
       <div>
@@ -83,7 +74,7 @@ const submitForm = async () => {
           <span class="input-group-text">
             <i class="bi bi-lock-fill"></i>
           </span>
-          <input id="password" class="form-control" type="text" placeholder="Пароль" aria-label="default input example">
+          <input id="password" class="form-control" type="text" placeholder="Пароль" v-model="form.password" aria-label="default input example" required>
         </div>
         <p v-if="errors.password" class="text-red-500 text-sm mt-1">{{ errors.password }}</p>
       </div>

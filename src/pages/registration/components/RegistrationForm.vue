@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_URL, axiosDB } from '@/js/api'
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -9,7 +10,11 @@ const successMessage = ref('')
 
 const form = ref({
   login: '',
-  email: '',
+  lastName: '',
+  name: '',
+  patronymic: '',
+  phone: '',
+  reportCard: '',
   password: '',
   confirmPassword: '',
   agreeTerms: false
@@ -17,7 +22,11 @@ const form = ref({
 
 const errors = ref({
   login: '',
-  email: '',
+  lastName: '',
+  name: '',
+  patronymic: '',
+  phone: '',
+  reportCard: '',
   password: '',
   confirmPassword: '',
   agreeTerms: ''
@@ -27,33 +36,41 @@ const validate = () => {
   let isValid = true
   errors.value = {
     login: '',
-    email: '',
+    lastName: '',
+    name: '',
+    patronymic: '',
+    phone: '',
+    reportCard: '',
     password: '',
     confirmPassword: '',
     agreeTerms: ''
   }
 
-  if (!form.value.login.trim()) {
+  console.log('старт')
+  if (!form.value.login) {
     errors.value.login = 'Логин обязателен'
+    isValid = false
+  } else if (form.value.login.length < 4) {
+    errors.value.login = 'Минимум 4 символа'
     isValid = false
   }
 
-  if (!form.value.name.trim()) {
+  if (!form.value.name) {
     errors.value.name = 'Имя обязателен'
     isValid = false
   }
 
-  if (!form.value.lastname.trim()) {
-    errors.value.lastname = 'Фамилия обязателен'
+  if (!form.value.lastName) {
+    errors.value.lastName = 'Фамилия обязателен'
     isValid = false
   }
 
-  if (!form.value.patronymic.trim()) {
+  if (!form.value.patronymic) {
     errors.value.patronymic = 'Отчество обязателен'
     isValid = false
   }
 
-  if (!form.value.phone.trim() || !form.value.reportCard.trim()) {
+  if (!form.value.phone || !form.value.reportCard) {
     errors.value.reportCard = 'Заполните телефон или номер студенческого билета'
     isValid = false
   }
@@ -67,6 +84,7 @@ const validate = () => {
   }
 
   if (form.value.password !== form.value.confirmPassword) {
+
     errors.value.confirmPassword = 'Пароли не совпадают'
     isValid = false
   }
@@ -87,13 +105,41 @@ const submitForm = async () => {
   successMessage.value = ''
 
   try {
-    // Здесь будет реальный API-запрос
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
+    console.log('Заполнение полей')
+    const userData = {
+      login: form.value.login,
+      name: form.value.lastName + ' ' + form.value.name + ' ' + form.value.patronymic,
+      password: form.value.password,
+      phone: form.value.phone,
+      reportCardNumber: form.value.reportCard,
+    }
+    console.log(userData)
+
+    console.log('отправка на сервер')
+    const response = await axiosDB.post(API_URL + '/user', userData)
+
     successMessage.value = 'Регистрация успешна! Перенаправляем...'
-    setTimeout(() => router.push('/'), 2000)
+    setTimeout(() => router.push('/chat'), 200)
   } catch (error) {
-    errorMessage.value = 'Ошибка регистрации: ' + error.message
+    // Обработка ошибок
+    if (error.response) {
+      // Ошибки от сервера
+      if (error.response.data.errors) {
+        // Валидационные ошибки
+        for (const [field, message] of Object.entries(error.response.data.errors)) {
+          if (errors.value.hasOwnProperty(field)) {
+            errors.value[field] = message[0]
+          }
+        }
+      } else {
+        errorMessage.value = error.response.data.message || 'Ошибка регистрации'
+      }
+    } else {
+      console.error('Full error:', error); // <-- добавьте это
+      console.log('Response data:', error.response.data);
+      console.log('Response status:', error.response.status);
+      errorMessage.value = 'Ошибка сети или сервера'
+    }
   } finally {
     isLoading.value = false
   }
@@ -112,18 +158,21 @@ const submitForm = async () => {
       {{ errorMessage }}
     </div>
     
-    <form @submit.prevent="submitForm" class="space-y-4">
-      <div class="input-group">
-        <span class="input-group-text">
-            <i class="bi bi-person-circle"></i>
-          </span>
-          <input type="text" class="form-control" placeholder="Логин" v-model="form.login" required>
+    <form id="registration" @submit.prevent="submitForm" class="space-y-4">
+      <div>
+        <div class="input-group">
+          <span class="input-group-text">
+              <i class="bi bi-person-circle"></i>
+            </span>
+            <input id="login" v-model="form.login" type="text" class="form-control" placeholder="Логин" required>
+        </div>
+        <p v-if="errors.login" class="text-red-500 text-sm mt-1">{{ errors.login }}</p>
       </div>
-
+      
       <div class="input-group">
-        <input id="lastname" type="text" placeholder="Фамилия" class="form-control" required>
-        <input id="name" type="text" placeholder="Имя" class="form-control" required>
-        <input id="patronymic" type="text" placeholder="Отчество" class="form-control">
+        <input id="lastName" v-model="form.lastName" type="text" placeholder="Фамилия" class="form-control" required>
+        <input id="name" v-model="form.name" type="text" placeholder="Имя" class="form-control" required>
+        <input id="patronymic" v-model="form.patronymic" type="text" placeholder="Отчество" class="form-control">
       </div>
      
       <div>
@@ -132,7 +181,7 @@ const submitForm = async () => {
           <span class="input-group-text">
             <i class="bi bi-telephone-fill"></i>
           </span>
-          <input id="phone" class="form-control" type="text" placeholder="Номер телефона" aria-label="default input example">
+          <input id="phone" v-model="form.phone" class="form-control" type="text" placeholder="Номер телефона" aria-label="default input example">
         </div>
         <p v-if="errors.phone" class="text-red-500 text-sm mt-1">{{ errors.phone }}</p>
       </div>
@@ -143,7 +192,7 @@ const submitForm = async () => {
           <span class="input-group-text">
             <i class="bi bi-card-text"></i>
           </span>
-          <input id="reportCard" class="form-control" type="text" placeholder="Номер студенческого билета" aria-label="default input example">
+          <input id="reportCard" v-model="form.reportCard" class="form-control" type="text" placeholder="Номер студенческого билета" aria-label="default input example">
         </div>
         <p v-if="errors.reportCard" class="text-red-500 text-sm mt-1">{{ errors.reportCard }}</p>
       </div>
@@ -153,7 +202,7 @@ const submitForm = async () => {
           <span class="input-group-text">
             <i class="bi bi-lock-fill"></i>
           </span>
-          <input id="password" class="form-control" type="text" placeholder="Пароль" aria-label="default input example">
+          <input id="password" v-model="form.password" class="form-control" type="password" placeholder="Пароль" aria-label="default input example" required>
         </div>
         <p v-if="errors.password" class="text-red-500 text-sm mt-1">{{ errors.password }}</p>
       </div>
@@ -163,7 +212,7 @@ const submitForm = async () => {
           <span class="input-group-text">
             <i class="bi bi-lock"></i>
           </span>
-          <input id="confirmPassword" class="form-control" type="password">
+          <input id="confirmPassword" v-model="form.confirmPassword" class="form-control" type="password">
         </div>
         <p v-if="errors.confirmPassword" class="text-red-500 text-sm mt-1">{{ errors.confirmPassword }}</p>
       </div>
@@ -182,7 +231,7 @@ const submitForm = async () => {
       
       <button
         type="submit"
-        class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
+        class="btn btn-secondary"
         :disabled="isLoading"
       >
         <span v-if="isLoading" class="inline-block animate-spin mr-2">↻</span>
@@ -222,6 +271,6 @@ input[type="password"]:focus {
 }
 
 .border-red-500 {
-  border-color: #ef4444;
+  color: #ef4444;
 }
 </style>

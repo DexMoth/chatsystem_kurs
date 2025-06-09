@@ -1,3 +1,7 @@
+<script setup>
+import RegistrationForm from './components/RegistrationForm.vue'
+</script>
+
 <template>
   <div class="registration-page">
     <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -6,9 +10,6 @@
   </div>
 </template>
 
-<script setup>
-import RegistrationForm from './components/RegistrationForm.vue'
-</script>
 
 <style scoped>
 body {
