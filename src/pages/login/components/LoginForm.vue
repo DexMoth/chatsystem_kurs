@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_URL, axiosDB } from '@/js/api'
+import { useAuthStore } from '@/js/api';
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -35,12 +36,17 @@ const submitForm = async () => {
   successMessage.value = ''
 
   try {
-    const response = await axiosDB.post(API_URL + '/user', form.value)
+    const response = await axiosDB.post(API_URL + '/login', form.value)
     
-    // Сохраняем токен
-    localStorage.setItem('authToken', response.data.token)
+    const { token, user } = response.data;
+    const authStore = useAuthStore();
+    authStore.login({
+      token,
+      user
+    });
     
     // Перенаправляем на защищенную страницу
+    successMessage.value = 'Вход выполнен успешно!';
     router.push('/chat')
   } catch (err) {
     errorMessage.value = err.response?.data?.message || 'Ошибка входа'

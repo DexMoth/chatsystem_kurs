@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL, axiosDB } from '@/js/api'
+import { API_URL, axiosDB, useAuthStore } from '@/js/api'
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -70,8 +70,11 @@ const validate = () => {
     isValid = false
   }
 
-  if (!form.value.phone || !form.value.reportCard) {
+  if (!form.value.phone && !form.value.reportCard) {
     errors.value.reportCard = 'Заполните телефон или номер студенческого билета'
+    isValid = false
+  } else if (form.value.reportCard.length > 8) {
+    errors.value.login = 'Максимум 8 символов'
     isValid = false
   }
 
@@ -117,6 +120,8 @@ const submitForm = async () => {
 
     console.log('отправка на сервер')
     const response = await axiosDB.post(API_URL + '/user', userData)
+    useAuthStore.currentUser.value = response.data.user;
+    useAuthStore.isAuthenticated.value = true;
 
     successMessage.value = 'Регистрация успешна! Перенаправляем...'
     setTimeout(() => router.push('/chat'), 200)

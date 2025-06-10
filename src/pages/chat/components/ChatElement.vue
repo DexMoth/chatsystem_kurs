@@ -12,19 +12,30 @@ defineProps({
 </script>
 
 <template>
-<div class="container chat-element">
-    <div class="row align-items-start g-0">
-        <div class="col-auto image-col">
-            <img :src="image" :alt="name" class="chat-image" height="50px" width="50px">
-        </div>
-        <div class="col text-col">
-            <p class="chat-name">{{ name }}</p>
+  <button type="button" class="btn btn-light chat-button">
+    <div class="container chat-element">
+        <div class="row align-items-start g-0">
+            <div class="col-auto image-col">
+                <img :src="image" :alt="name" class="chat-image" height="50px" width="50px">
+            </div>
+            <div class="col text-col">
+                <p class="chat-name">{{ name }}</p>
+            </div>
         </div>
     </div>
-</div>
+  </button>
 </template>
 
 <style scoped>
+.chat-button {
+  width: 100%;
+  padding: 6px 16px;
+  border: none;
+  text-align: left;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
 .chat-element {
   width: 100%;
   padding: 0;

@@ -2,10 +2,6 @@
 import ChatElement from './components/ChatElement.vue'
 import ChatWindow from './components/ChatWindow.vue'
 import { ref } from 'vue'
-// для входа в учетку
-//import { useAuthStore } from '@/js/auth'
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 
 const chats = ref([
   { id: 1, name: 'Рабочий чат', image: 'https://png.klev.club/uploads/posts/2024-04/thumbs/png-klev-club-r31i-p-bukva-f-png-3.png' },
@@ -14,14 +10,6 @@ const chats = ref([
   { id: 4, name: 'Игровой чат', image: 'https://png.klev.club/uploads/posts/2024-04/thumbs/png-klev-club-r31i-p-bukva-f-png-3.png' }
 ])
 
-// const authStore = useAuthStore()
-// const router = useRouter()
-
-// onMounted(() => {
-//   if (!authStore.isAuthenticated) {
-//     router.push('/login')
-//   }
-// })
 </script>
 
 <template>
@@ -29,7 +17,7 @@ const chats = ref([
     <div class="row align-items-start">
       <div class="col">
         <form action="chat/edit/">
-          <button type="submit" class="btn btn-secondary">Создать чат</button>
+          <button type="submit" class="btn btn-secondary p-10">Создать чат</button>
         </form>
         <ChatElement 
           v-for="chat in chats" 
@@ -46,11 +34,5 @@ const chats = ref([
 </template>
 
 <style scoped>
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f5f5f5;
-}
+
 </style>

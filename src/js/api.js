@@ -1,4 +1,7 @@
 import axios from 'axios'
+import { useRouter } from 'vue-router';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
 export const API_URL = "http://localhost:8087/api"
 export const axiosDB = axios.create({
@@ -8,10 +11,27 @@ export const axiosDB = axios.create({
     },
 })
 
-axiosDB.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
+export const useAuthStore = defineStore('auth', () => {
+  const router = useRouter();
+  const currentUser = ref(null);
+  const token = ref(null);
+  const isAuthenticated = ref(false);
+
+  const login = (authData) => {
+    currentUser.value = authData.user;
+    token.value = authData.token;
+    isAuthenticated.value = true;
+    
+    localStorage.setItem('authToken', authData.token);
+    localStorage.setItem('currentUser', JSON.stringify(authData.user));
+  };
+
+  const logout = () => {
+    currentUser.value = null;
+    token.value = null;
+    isAuthenticated.value = false;
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+    router.push('/login');
+  };
 })

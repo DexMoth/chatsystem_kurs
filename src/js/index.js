@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-//import { useAuthStore } from './auth'
+import { useAuthStore } from './api'
 import RegistrationPage from '@/pages/registration/RegistrationPage.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
 import ProfilePage from '@/pages/profile/ProfilePage.vue'
@@ -40,20 +40,6 @@ const router = createRouter({
         component: EditChatPage
       },
     ]
-  })
-  
-  // /// проверка на вход в учетку
-  // router.beforeEach((to) => {
-  //   const authStore = useAuthStore()
-  //   const isAuthenticated = authStore.checkAuth()
-    
-  //   if (to.meta.requiresAuth && !isAuthenticated) {
-  //     return { name: 'login' }
-  //   }
-    
-  //   if (to.meta.guestOnly && isAuthenticated) {
-  //     return { name: 'home' }
-  //   }
-  // })
+})
 
-  export default router
+export default router

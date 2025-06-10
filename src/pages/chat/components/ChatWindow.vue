@@ -1,5 +1,61 @@
+<script setup>
+import { ref } from 'vue'
+
+const messages = ref([
+  { id: 1, text: 'Привет! Как дела?', sender: 'other', time: '10:30', attachments: [] },
+  { id: 2, text: 'Привет! Все отлично, спасибо!', sender: 'me', time: '10:32', attachments: [] },
+  { id: 3, text: 'Что нового?', sender: 'other', time: '10:33', attachments: [] }
+])
+
+const newMessage = ref('')
+const selectedFile = ref(null)
+const fileInput = ref(null)
+
+const handleFileSelect = (event) => {
+  if (event.target.files.length > 0) {
+    selectedFile.value = event.target.files[0]
+  }
+}
+
+const sendMessage = async () => {
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  
+  const newMsg = {
+    id: Date.now(),
+    text: newMessage.value.trim(),
+    sender: 'me',
+    time: time,
+    attachments: []
+  }
+
+  if (selectedFile.value) {
+    try {
+      const fileUrl = 'https://lastfm.freetls.fastly.net/i/u/ar0/e85616aff0b1467994ca3ae8ccbb2cea.jpg';
+      //const fileUrl = await uploadToStorage(selectedFile.value)
+      
+      //о файле
+      newMsg.attachments.push({
+        name: selectedFile.value.name,
+        url: fileUrl,
+        type: selectedFile.value.type,
+        size: selectedFile.value.size
+      })
+    } catch (error) {
+      console.error('Ошибка загрузки файла:', error)
+    }
+  }
+
+  if (newMsg.text || newMsg.attachments.length > 0) {
+    messages.value.push(newMsg)
+    newMessage.value = ''
+    selectedFile.value = null
+    fileInput.value.value = ''
+  }
+}
+</script>
+
 <template>
-    <div class="chat-window">
+  <div class="chat-window">
     <div class="chat-header">
       <h4>Название чата</h4>
     </div>
@@ -11,7 +67,19 @@
         :class="['message', message.sender === 'me' ? 'my-message' : 'other-message']"
       >
         <div class="message-content">
-          {{ message.text }}
+          <div v-if="message.text">{{ message.text }}</div>
+          
+          <div v-if="message.attachments.length" class="attachments">
+            <div v-for="(file, idx) in message.attachments" :key="idx" class="attachment">
+              <a :href="file.url" target="_blank" class="file-link">
+                <span>Файл: </span>
+                <span class="file-name">{{ file.name }}</span>
+              </a>
+              <div v-if="file.type.startsWith('image/')" class="image-preview">
+                <img :src="file.url" :alt="file.name" class="preview-image">
+              </div>
+            </div>
+          </div>
         </div>
         <div class="message-time">
           {{ message.time }}
@@ -21,43 +89,37 @@
 
     <!--сообщение-->
     <div class="message-input">
-      <input
-        v-model="newMessage"
-        @keyup.enter="sendMessage"
-        placeholder="Введите сообщение..."
-        class="form-control"
-      >
-      <button @click="sendMessage" class="btn btn-primary">
-        Отправить
-      </button>
+      <div class="container">
+        <div class="row align-items-start g-3 mb-3">
+          <div class="col">
+            <input
+              v-model="newMessage"
+              @keyup.enter="sendMessage"
+              placeholder="Введите сообщение..."
+              class="form-control"
+            >
+          </div>
+          <div class="col">
+            <button @click="sendMessage" class="btn btn-primary">
+              Отправить
+            </button>
+          </div>
+        </div>
+        <div class="row align-items-start g-0">
+          <div class="input-group">
+            <input 
+              type="file" 
+              ref="fileInput"
+              @change="handleFileSelect" 
+              class="form-control" 
+              id="inputGroupFile"
+            >
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-
-const messages = ref([
-  { id: 1, text: 'Привет! Как дела?', sender: 'other', time: '10:30' },
-  { id: 2, text: 'Привет! Все отлично, спасибо!', sender: 'me', time: '10:32' },
-  { id: 3, text: 'Что нового?', sender: 'other', time: '10:33' }
-])
-
-const newMessage = ref('')
-
-const sendMessage = () => {
-  if (newMessage.value.trim()) {
-    messages.value.push({
-      id: Date.now(),
-      text: newMessage.value,
-      sender: 'me',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    })
-    newMessage.value = ''
-    // Здесь можно добавить прокрутку вниз
-  }
-}
-</script>
 
 <style scoped>
 .chat-window {
@@ -119,6 +181,10 @@ const sendMessage = () => {
   text-align: right;
 }
 
+.my-message .file-link {
+  background: rgba(255, 255, 255, 0.8);
+}
+
 .message-input {
   display: flex;
   padding: 15px;
@@ -129,5 +195,16 @@ const sendMessage = () => {
 .message-input input {
   flex: 1;
   margin-right: 10px;
+}
+
+.image-preview {
+  margin-top: 8px;
+}
+
+.preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
 }
 </style>
