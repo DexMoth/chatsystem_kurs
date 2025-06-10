@@ -6,7 +6,9 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 <template>
   <Header/>
-  <RouterView />
+  <div id="main">
+    <RouterView />
+  </div>
 </template>
 
 <style>
@@ -18,6 +20,10 @@ import "bootstrap-icons/font/bootstrap-icons.css";
   font-family: Arial;
   display: flex;
   flex-direction: column;
+}
+
+#main {
+  padding: 0px 10%;
 }
 
 :root {

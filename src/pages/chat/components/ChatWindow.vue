@@ -125,7 +125,7 @@ const sendMessage = async () => {
 .chat-window {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 90vh;
   border-left: 1px solid #ddd;
   background-color: #f9f9f9;
 }

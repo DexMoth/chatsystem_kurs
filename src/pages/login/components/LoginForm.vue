@@ -36,20 +36,26 @@ const submitForm = async () => {
   successMessage.value = ''
 
   try {
-    const response = await axiosDB.post(API_URL + '/login', form.value)
-    
-    const { token, user } = response.data;
-    const authStore = useAuthStore();
-    authStore.login({
-      token,
-      user
-    });
-    
-    // Перенаправляем на защищенную страницу
-    successMessage.value = 'Вход выполнен успешно!';
-    router.push('/chat')
+    const response = await axiosDB.post(API_URL + '/auth/login', form.value);
+    console.log(response.data);
+
+    try {
+      const authCheck = await axiosDB.get(API_URL + '/auth/check');
+      console.log(authCheck.data);
+      
+      if (authCheck.data) {
+        successMessage.value = 'Вход выполнен';
+        router.push('/chat');
+      }
+    } catch (err) {
+      console.error('Ошибка авторизации:', err);
+      errorMessage.value = 'Сессия не создана';
+    }
   } catch (err) {
-    errorMessage.value = err.response?.data?.message || 'Ошибка входа'
+    console.error('Ошибка входа:', err);
+    errorMessage.value = err.response?.data?.message || 'Ошибка входа';
+  } finally {
+    isLoading.value = false;
   }
 }
 

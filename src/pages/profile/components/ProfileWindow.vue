@@ -1,4 +1,12 @@
 <script setup>
+
+try {
+    const user = await axiosDB.get(API_URL + '/user/');
+    console.log(user.data);
+} catch (err) {
+  console.error('Ошибка:', err);
+}
+
 defineProps({
   user: {
     type: Object,

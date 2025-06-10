@@ -15,7 +15,7 @@ const chats = ref([
 <template>
   <div class="container">
     <div class="row align-items-start">
-      <div class="col">
+      <div class="col-4">
         <form action="chat/edit/">
           <button type="submit" class="btn btn-secondary p-10">Создать чат</button>
         </form>

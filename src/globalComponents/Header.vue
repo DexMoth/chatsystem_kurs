@@ -55,7 +55,6 @@ const login = computed(() => {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     font-size: 20px;
     padding: 10px 0px 10px 0px;
-    /* для закрепления подвала внизу страницы*/
 	flex: 0 0 auto;
 }
 
