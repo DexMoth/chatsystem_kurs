@@ -1,57 +1,69 @@
 <script setup>
+import { ref, onMounted } from 'vue'
+import { API_URL, axiosDB } from '@/js/api'
 
-try {
-    const user = await axiosDB.get(API_URL + '/user/');
-    console.log(user.data);
-} catch (err) {
-  console.error('Ошибка:', err);
-}
-
-defineProps({
-  user: {
-    type: Object,
-    required: true,
-    default: () => ({
-      name: 'Иван Иванов',
-      email: 'ivan@example.com',
-      phone: '+7 (123) 456-78-90',
-      studentId: '12345678',
-      avatar: 'https://i.pinimg.com/736x/a9/57/98/a957983394246f57439920cb836e2d45.jpg',
-      faculty: 'Информационные технологии',
-      course: '3 курс',
-      group: 'ИТ-301'
-    })
-  }
+const user = ref({
+  name: '',
+  login: '',
+  phone: '',
+  reportCardNumber: '',
+  avatar: 'https://i.pinimg.com/736x/a9/57/98/a957983394246f57439920cb836e2d45.jpg',
 })
 
+const isLoading = ref(true)
+const error = ref(null)
+
+const fetchUserData = async () => {
+  try {
+    const response = await axiosDB.get(API_URL + '/user/me')
+    user.value = response.data
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Ошибка загрузки данных'
+    console.error('Ошибка:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchUserData()
+})
+
+// defineProps({
+//   user: {
+//     type: Object,
+//     required: true,
+//     default: () => ({
+//       name: 'Иван Иванов',
+//       email: 'ivan@example.com',
+//       phone: '+7 (123) 456-78-90',
+//       studentId: '12345678',
+//       avatar: 'https://i.pinimg.com/736x/a9/57/98/a957983394246f57439920cb836e2d45.jpg',
+//       faculty: 'Информационные технологии',
+//       course: '3 курс',
+//       group: 'ИТ-301'
+//     })
+//   }
+// })
 </script>
+
 <template>
     <div class="profile-card">
         <div class="profile-header">
             <img :src="user.avatar" alt="Аватар" class="profile-avatar">
             <h2 class="profile-name">{{ user.name }}</h2>
-            <p class="profile-email">{{ user.email }}</p>
+            <p class="profile-login">{{ user.login }}</p>
             </div>
-
             <div class="profile-details">
-            <div class="detail-item">
-                <i class="bi bi-telephone"></i>
-                <span>{{ user.phone }}</span>
+              <div class="detail-item">
+                  <i class="bi bi-telephone"></i>
+                  <span>{{ user.phone }}</span>
+              </div>
+              <div class="detail-item">
+                  <i class="bi bi-person-badge"></i>
+                  <span>Студенческий билет: {{ user.reportCardNumber }}</span>
+              </div>
             </div>
-            <div class="detail-item">
-                <i class="bi bi-person-badge"></i>
-                <span>Студенческий билет: {{ user.studentId }}</span>
-            </div>
-            <div class="detail-item">
-                <i class="bi bi-building"></i>
-                <span>Факультет: {{ user.faculty }}</span>
-            </div>
-            <div class="detail-item">
-                <i class="bi bi-book"></i>
-                <span>{{ user.course }}, {{ user.group }}</span>
-            </div>
-            </div>
-
             <button class="btn btn-edit">
             <i class="bi bi-pencil"></i> Редактировать профиль
         </button>
