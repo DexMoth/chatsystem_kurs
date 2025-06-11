@@ -1,5 +1,9 @@
 <script setup>
 defineProps({
+  id: {
+    type: [Number],
+    required: true
+  },
   name: {
     type: String,
     required: true
@@ -12,17 +16,17 @@ defineProps({
 </script>
 
 <template>
-  <label type="button" for={{name}} class="btn btn-light user-button">
+  <label type="button" :for="id" class="btn btn-light user-button mt-2">
     <div class="container chat-element">
         <div class="row align-items-start g-0">
-            <div class="col-auto image-col">
+            <div class="col-2 image-col">
                 <img :src="image" :alt="name" class="image" height="50px" width="50px">
             </div>
-            <div class="col text-col">
+            <div class="col-8 text-col">
                 <p class="name">{{ name }}</p>
             </div>
             <div class="col text-col">
-                <input class="form-check-input" type="checkbox" value="" id={{name}}>
+                <input class="form-check-input" type="checkbox" :value="id" :id="id">
             </div>
         </div>
     </div>

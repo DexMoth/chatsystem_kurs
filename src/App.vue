@@ -20,18 +20,21 @@ import "bootstrap-icons/font/bootstrap-icons.css";
   font-family: Arial;
   display: flex;
   flex-direction: column;
+  flex-grow: 1
 }
 
 #main {
   padding: 0px 10%;
+  padding-top: 20px;
+  flex-grow: 1
 }
 
 :root {
-    --color-main: rgb(51, 19, 13);
+    --color-main: rgb(23, 6, 95);
     --color-body: #e5e5e5;
     --color-nav: rgb(217, 202, 183);
-    --color-link: rgb(210, 46, 46);
-    --color-link-hover: rgb(138, 36, 14);
+    --color-link: rgb(46, 51, 210);
+    --color-link-hover: rgb(58, 38, 191);
     --color-text: #0f0e0e;
 }
 </style>

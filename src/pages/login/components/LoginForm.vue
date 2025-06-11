@@ -63,7 +63,7 @@ const submitForm = async () => {
 
 <template>
   <div class="login-form">
-    <h2 class="text-2xl font-bold mb-6">Вход в учетную запись</h2>
+    <h2 class="text-2xl font-bold mb-3">Вход в учетную запись</h2>
     
     <div v-if="successMessage" class="mb-4 p-4 bg-green-100 text-green-700 rounded">
       {{ successMessage }}
@@ -74,7 +74,7 @@ const submitForm = async () => {
     </div>
     
     <form @submit.prevent="submitForm" class="space-y-4">
-      <div class="input-group">
+      <div class="input-group mb-3">
         <span class="input-group-text">
             <i class="bi bi-person-circle"></i>
         </span>
@@ -82,7 +82,7 @@ const submitForm = async () => {
       </div>
 
       <div>
-        <div class="input-group">
+        <div class="input-group mb-3">
           <span class="input-group-text">
             <i class="bi bi-lock-fill"></i>
           </span>
@@ -93,10 +93,8 @@ const submitForm = async () => {
       
       <button
         type="submit"
-        class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-        :disabled="isLoading"
+        class="btn btn-secondary"
       >
-        <span v-if="isLoading" class="inline-block animate-spin mr-2">↻</span>
         Войти
       </button>
     </form>

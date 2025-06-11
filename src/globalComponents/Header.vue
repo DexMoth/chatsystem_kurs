@@ -18,7 +18,7 @@ const login = computed(() => {
                 Электронно-образовательная среда. Общение
             </a>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <div v-if="authStore.isAuthenticated" class="user-info">
                         <li class="nav-item">
                             <router-link to="/chat" class="auth-link">Чаты</router-link>
@@ -44,18 +44,17 @@ const login = computed(() => {
     </nav>
 </template>
 
-<style>
+<style scoped>
 #header { 
     width: 100%;
     background-color: var(--color-main);
     text-align: center;
     font-family: Arial;
-    color: white;
-    padding: 1rem 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     font-size: 20px;
-    padding: 10px 0px 10px 0px;
-	flex: 0 0 auto;
+    color: white;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	display: flex;
 }
 
 #header a {

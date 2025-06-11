@@ -153,7 +153,7 @@ const submitForm = async () => {
 
 <template>
   <div class="registration-form">
-    <h2 class="text-2xl font-bold mb-6">Регистрация</h2>
+    <h2 class="text-2xl font-bold mb-3">Регистрация</h2>
     
     <div v-if="successMessage" class="mb-4 p-4 bg-green-100 text-green-700 rounded">
       {{ successMessage }}
@@ -165,7 +165,7 @@ const submitForm = async () => {
     
     <form id="registration" @submit.prevent="submitForm" class="space-y-4">
       <div>
-        <div class="input-group">
+        <div class="input-group mb-3">
           <span class="input-group-text">
               <i class="bi bi-person-circle"></i>
             </span>
@@ -174,13 +174,13 @@ const submitForm = async () => {
         <p v-if="errors.login" class="text-red-500 text-sm mt-1">{{ errors.login }}</p>
       </div>
       
-      <div class="input-group">
+      <div class="input-group mb-3">
         <input id="lastName" v-model="form.lastName" type="text" placeholder="Фамилия" class="form-control" required>
         <input id="name" v-model="form.name" type="text" placeholder="Имя" class="form-control" required>
         <input id="patronymic" v-model="form.patronymic" type="text" placeholder="Отчество" class="form-control">
       </div>
      
-      <div>
+      <div class="mb-3">
         <label for="phone" class="block mb-1">Для преподавателя:</label>
         <div class="input-group">
           <span class="input-group-text">
@@ -191,7 +191,7 @@ const submitForm = async () => {
         <p v-if="errors.phone" class="text-red-500 text-sm mt-1">{{ errors.phone }}</p>
       </div>
       
-      <div>
+      <div class="mb-3">
         <label for="reportCard" class="block mb-1">Для студента:</label>
         <div class="input-group">
           <span class="input-group-text">
@@ -203,7 +203,7 @@ const submitForm = async () => {
       </div>
 
       <div>
-        <div class="input-group">
+        <div class="input-group mb-3">
           <span class="input-group-text">
             <i class="bi bi-lock-fill"></i>
           </span>
@@ -213,7 +213,7 @@ const submitForm = async () => {
       </div>
       
       <div>
-        <div class="input-group">
+        <div class="input-group mb-3">
           <span class="input-group-text">
             <i class="bi bi-lock"></i>
           </span>
@@ -222,7 +222,7 @@ const submitForm = async () => {
         <p v-if="errors.confirmPassword" class="text-red-500 text-sm mt-1">{{ errors.confirmPassword }}</p>
       </div>
       
-      <div class="form-check flex items-center">
+      <div class="form-check flex items-center mb-3">
         <input
           id="agreeTerms"
           class="form-check-input mr-2"
