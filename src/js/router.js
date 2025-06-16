@@ -4,7 +4,7 @@ import RegistrationPage from '@/pages/registration/RegistrationPage.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
 import ProfilePage from '@/pages/profile/ProfilePage.vue'
 import ChatPage from '@/pages/chat/ChatPage.vue'
-import EditChatPage from '@/pages/chat/EditChatPage.vue'
+import EditChatPage from '@/pages/chat-edit/EditChatPage.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,11 +31,17 @@ const router = createRouter({
       },
       {
         path: '/chat',
-        name: 'chat',
+        name: 'chat-list',
         component: ChatPage
       },
       {
-        path: '/chat/edit',
+        path: '/chat/:id',
+        name: 'chat-detail',
+        component: ChatPage,
+        props: true
+      },
+      {
+        path: '/chat-edit',
         name: 'editChat',
         component: EditChatPage
       },

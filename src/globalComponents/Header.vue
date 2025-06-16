@@ -13,10 +13,10 @@ const login = computed(() => {
 <template>
     <nav id="header" class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">
+            <router-link to="/" type="submit">
                 <img id="logo" src='../assets/logo.svg' height="50px"/>
                 Электронно-образовательная среда. Общение
-            </a>
+            </router-link>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <div v-if="authStore.isAuthenticated" class="user-info">

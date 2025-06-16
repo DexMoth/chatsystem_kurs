@@ -1,63 +1,89 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { API_URL, axiosDB } from '@/js/api'
 
-const messages = ref([
-  { id: 1, text: 'Привет! Как дела?', sender: 'other', time: '10:30', attachments: [] },
-  { id: 2, text: 'Привет! Все отлично, спасибо!', sender: 'me', time: '10:32', attachments: [] },
-  { id: 3, text: 'Что нового?', sender: 'other', time: '10:33', attachments: [] }
-])
+const props = defineProps({
+  chatId: {
+    type: [String, Number],
+    required: true
+  }
+})
 
+const messages = ref([])
+const user = ref(null)
 const newMessage = ref('')
 const selectedFile = ref(null)
 const fileInput = ref(null)
+const userId = ref(null)
 
-const handleFileSelect = (event) => {
-  if (event.target.files.length > 0) {
-    selectedFile.value = event.target.files[0]
+// Загрузка данных пользователя и сообщений
+const loadData = async () => {
+  try {
+    // Загружаем текущего пользователя
+    const userResponse = await axiosDB.get(API_URL + '/user/me')
+    user.value = userResponse.data
+    userId.value = user.value.id
+    
+    // Загружаем сообщения чата
+    const messagesResponse = await axiosDB.get(`${API_URL}/message/chat/${props.chatId}`)
+    
+    messages.value = messagesResponse.data.map(msg => ({
+      id: msg.id,
+      name: user.value.name.substring(0, user.value.name.indexOf(" ") + 2),
+      text: msg.text,
+      sender: msg.userId === user.value.id ? 'me' : 'other',
+      time: formatTime(msg.createdAt),
+      attachments: []
+    }))
+  } catch (error) {
+    console.error('Ошибка загрузки данных:', error)
   }
 }
 
+// Форматирование времени
+const formatTime = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+// Отправка сообщения
 const sendMessage = async () => {
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  if (!newMessage.value.trim() && !selectedFile.value) return
   
-  const newMsg = {
-    id: Date.now(),
-    text: newMessage.value.trim(),
-    sender: 'me',
-    time: time,
-    attachments: []
-  }
-
-  if (selectedFile.value) {
-    try {
-      const fileUrl = 'https://lastfm.freetls.fastly.net/i/u/ar0/e85616aff0b1467994ca3ae8ccbb2cea.jpg';
-      //const fileUrl = await uploadToStorage(selectedFile.value)
-      
-      //о файле
-      newMsg.attachments.push({
-        name: selectedFile.value.name,
-        url: fileUrl,
-        type: selectedFile.value.type,
-        size: selectedFile.value.size
-      })
-    } catch (error) {
-      console.error('Ошибка загрузки файла:', error)
+  try {
+    const messageData = {
+      chatId: props.chatId,
+      userId: userId.value,
+      text: newMessage.value.trim(),
+      isFavorite: false
     }
-  }
-
-  if (newMsg.text || newMsg.attachments.length > 0) {
-    messages.value.push(newMsg)
+    
+    const response = await axiosDB.post(`${API_URL}/message`, messageData)
     newMessage.value = ''
     selectedFile.value = null
     fileInput.value.value = ''
+    
+    // Перезагружаем сообщения после отправки
+    loadData()
+  } catch (error) {
+    console.error('Ошибка отправки сообщения:', error)
   }
 }
+
+// Обработка выбора файла
+const handleFileSelect = (event) => {
+  selectedFile.value = event.target.files[0]
+}
+
+// Загружаем данные при монтировании и изменении chatId
+onMounted(loadData)
+watch(() => props.chatId, loadData)
 </script>
 
 <template>
   <div class="chat-window">
     <div class="chat-header">
-      <h4>Название чата</h4>
+      <h4>Чат #{{ chatId }}</h4>
     </div>
 
     <div class="messages-container">
@@ -66,6 +92,7 @@ const sendMessage = async () => {
         :key="message.id"
         :class="['message', message.sender === 'me' ? 'my-message' : 'other-message']"
       >
+        <div>{{ message.name }}</div>
         <div class="message-content">
           <div v-if="message.text">{{ message.text }}</div>
           
@@ -87,7 +114,6 @@ const sendMessage = async () => {
       </div>
     </div>
 
-    <!--сообщение-->
     <div class="message-input">
       <div class="container">
         <div class="row align-items-start g-3 mb-3">

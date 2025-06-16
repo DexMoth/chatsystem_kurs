@@ -1,67 +1,69 @@
 <script setup>
+import { useRoute } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import ChatElement from './components/ChatElement.vue'
 import ChatWindow from './components/ChatWindow.vue'
 import { API_URL, axiosDB } from '@/js/api'
 
-// const user = ref(null)
-// const chats = ref([])
-// const isLoading = ref(true)
-// const error = ref(null)
+const route = useRoute() // Получаем текущий маршрут
+const chats = ref([])
 
-// const fetchUserAndChats = async () => {
-//   try {
-//     const userResponse = await axiosDB.get(API_URL + '/user/me')
-//     user.value = userResponse.data
-    
-//     const chatsResponse = await axiosDB.get(`${API_URL}/chat/user/${user.value.id}`)
-//     const chatsResponse = axiosDB.get(API_URL + '/chat')
-//     chats.value = chatsResponse.data
-    
-//   } catch (err) {
-//     console.error('Ошибка загрузки:', err)
-//     error.value = 'Не удалось загрузить данные'
-//   } finally {
-//     isLoading.value = false
-//   }
-// }
+const fetchChats = async () => {
+  try {
+    const response = await axiosDB.get(`${API_URL}/chat`)
+    console.log(response.data)
+    chats.value = response.data
+  } catch (err) {
+    console.error('Ошибка загрузки данныъ:', err)
+    error.value = 'Не удалось загрузить данные'
+  } finally {
+    isLoading.value = false
+  }
+}
 
-// onMounted(() => {
-//   fetchUserAndChats()
-// })
-
-const chats = ref([
-  { id: 1, name: 'Рабочий чат', image: 'https://png.klev.club/uploads/posts/2024-04/thumbs/png-klev-club-r31i-p-bukva-f-png-3.png' },
-  { id: 2, name: 'Друзья', image: 'https://png.klev.club/uploads/posts/2024-04/thumbs/png-klev-club-r31i-p-bukva-f-png-3.png' },
-  { id: 3, name: 'Семья', image: 'https://png.klev.club/uploads/posts/2024-04/thumbs/png-klev-club-r31i-p-bukva-f-png-3.png' },
-  { id: 4, name: 'Игровой чат', image: 'https://png.klev.club/uploads/posts/2024-04/thumbs/png-klev-club-r31i-p-bukva-f-png-3.png' }
-])
-
+onMounted(() => {
+  fetchChats()
+})
 </script>
 
 <template>
   <div class="container">
     <div class="row align-items-start">
       <div class="col-4">
-        <router-link to="/chat/edit" type="submit" class="btn btn-secondary p-10">Создать чат</router-link>
+        <router-link to="/chat-edit" type="submit" class="btn btn-secondary p-10">Создать чат</router-link>
         
-        <div v-if="chats.length === 0" class="alert alert-info">
+        <div v-if="chats.length === 0" class="alert alert-info mt-3">
           У вас пока нет чатов
         </div>
-
-        <ChatElement 
+        <router-link 
           v-for="chat in chats" 
           :key="chat.id"
-          :name="chat.name"
-          :image="chat.image"
-        />
+          :to="`/chat/${chat.id}`"
+          class="text-decoration-none"
+          :class="{ 'active-chat': route.params.id === chat.id.toString() }"
+        >
+          <ChatElement 
+            :name="chat.name"
+            :image="chat.image"
+            :is-active="route.params.id === chat.id.toString()"
+          />
+        </router-link>
       </div>
       <div class="col">
-        <ChatWindow/>
+        <div v-if="chats.length > 0">
+          <ChatWindow v-if="route.params.id" :chatId="route.params.id" />
+          <div v-else class="alert alert-info">
+            Выберите чат для просмотра сообщений
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.active-chat .chat-button {
+  background-color: #828892;
+  color: rgb(24, 19, 19);
+}
 </style>
