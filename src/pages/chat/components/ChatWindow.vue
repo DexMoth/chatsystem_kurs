@@ -22,7 +22,6 @@ const loadData = async () => {
     // Загружаем текущего пользователя
     const userResponse = await axiosDB.get(API_URL + '/user/me')
     user.value = userResponse.data
-    userId.value = user.value.id
     
     // Загружаем сообщения чата
     const messagesResponse = await axiosDB.get(`${API_URL}/message/chat/${props.chatId}`)
@@ -53,7 +52,7 @@ const sendMessage = async () => {
   try {
     const messageData = {
       chatId: props.chatId,
-      userId: userId.value,
+      userId: user.value.id,
       text: newMessage.value.trim(),
       isFavorite: false
     }
@@ -75,6 +74,34 @@ const handleFileSelect = (event) => {
   selectedFile.value = event.target.files[0]
 }
 
+// удаление чата
+const deleteChat = async () => {
+  if (!confirm('Вы точно хотите удалить этот чат? Это действие нельзя отменить.')) {
+    return
+  }
+  try {
+    await axiosDB.delete(`${API_URL}/chat/${props.chatId}`)
+    window.location.href = '/chat' 
+  } catch (error) {
+    console.error('Ошибка удаления чата:', error)
+    alert('Не удалось чат')
+  }
+}
+
+// удаление сообщения
+const deleteMessage = async (messageId) => {
+  if (!confirm('Вы точно хотите удалить сообщение? Это действие нельзя отменить.')) {
+    return
+  }
+  try {
+    await axiosDB.delete(`${API_URL}/message/${messageId}`)
+    window.location.reload();
+  } catch (error) {
+    console.error('Ошибка удаления сообщения:', error)
+    alert('Не удалось сообщение')
+  }
+}
+
 // Загружаем данные при монтировании и изменении chatId
 onMounted(loadData)
 watch(() => props.chatId, loadData)
@@ -83,7 +110,23 @@ watch(() => props.chatId, loadData)
 <template>
   <div class="chat-window">
     <div class="chat-header">
-      <h4>Чат #{{ chatId }}</h4>
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <h4>Чат #{{ chatId }}</h4>
+          </div>
+          <div class="col-auto">
+            <router-link :key="chatId" :to="`/chat-edit/${chatId}`">
+              <button class="btn btn-light">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+            </router-link>
+            <button class="btn btn-light">
+              <i class="bi bi-trash-fill" @click.stop="deleteChat()"></i>
+            </button>
+          </div>
+          </div>
+      </div>
     </div>
 
     <div class="messages-container">
@@ -109,7 +152,12 @@ watch(() => props.chatId, loadData)
           </div>
         </div>
         <div class="message-time">
-          {{ message.time }}
+          <div v-if="message.sender === 'me'">
+            <router-link :key="chatId" :to="`/chat-edit/${chatId}`">
+              <i class="bi bi-pencil-fill ms-4"></i>
+            </router-link>
+            <a><i class="bi bi-trash-fill ms-2" @click.stop="deleteMessage(message.id)"></i></a>
+          </div>
         </div>
       </div>
     </div>

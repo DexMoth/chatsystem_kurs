@@ -45,6 +45,11 @@ const router = createRouter({
         name: 'editChat',
         component: EditChatPage
       },
+      {
+        path: '/chat-edit/:id',
+        name: 'editChat2',
+        component: EditChatPage
+      },
     ]
 })
 
