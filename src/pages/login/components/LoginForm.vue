@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_URL, axiosDB } from '@/js/api'
-import { useAuthStore } from '@/js/api';
+import { useAuthStore } from '@/js/auth';
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -45,7 +45,8 @@ const submitForm = async () => {
       
       if (authCheck.data) {
         successMessage.value = 'Вход выполнен';
-        router.push('/chat');
+        window.location.href = '/chat';
+        //router.push('/chat');
       }
     } catch (err) {
       console.error('Ошибка авторизации:', err);

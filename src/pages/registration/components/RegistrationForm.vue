@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_URL, axiosDB, useAuthStore } from '@/js/api'
+import { API_URL, axiosDB } from '@/js/api'
+import { useAuthStore } from '@/js/auth';
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -56,17 +57,12 @@ const validate = () => {
   }
 
   if (!form.value.name) {
-    errors.value.name = 'Имя обязателен'
+    errors.value.name = 'Имя обязательно'
     isValid = false
   }
 
   if (!form.value.lastName) {
-    errors.value.lastName = 'Фамилия обязателен'
-    isValid = false
-  }
-
-  if (!form.value.patronymic) {
-    errors.value.patronymic = 'Отчество обязателен'
+    errors.value.lastName = 'Фамилия обязательна'
     isValid = false
   }
 
@@ -74,7 +70,7 @@ const validate = () => {
     errors.value.reportCard = 'Заполните телефон или номер студенческого билета'
     isValid = false
   } else if (form.value.reportCard.length > 8) {
-    errors.value.login = 'Максимум 8 символов'
+    errors.value.reportCard = 'Максимум 8 символов'
     isValid = false
   }
 
@@ -120,11 +116,13 @@ const submitForm = async () => {
 
     console.log('отправка на сервер')
     const response = await axiosDB.post(API_URL + '/user', userData)
-    useAuthStore.currentUser.value = response.data.user;
-    useAuthStore.isAuthenticated.value = true;
+    
+    const authStore = useAuthStore()
+    authStore.setUser(response.data.user)
+    authStore.isAuthenticated = true
 
     successMessage.value = 'Регистрация успешна! Перенаправляем...'
-    setTimeout(() => router.push('/chat'), 200)
+    router.push('/chat')
   } catch (error) {
     // Обработка ошибок
     if (error.response) {
@@ -140,9 +138,7 @@ const submitForm = async () => {
         errorMessage.value = error.response.data.message || 'Ошибка регистрации'
       }
     } else {
-      console.error('Full error:', error); // <-- добавьте это
-      console.log('Response data:', error.response.data);
-      console.log('Response status:', error.response.status);
+      console.error('Full error:', error);
       errorMessage.value = 'Ошибка сети или сервера'
     }
   } finally {

@@ -1,36 +1,64 @@
 <script setup>
-import { useAuthStore } from '@/js/api';
-import { computed } from 'vue';
+import { ref, onMounted } from 'vue'
+import { API_URL, axiosDB } from '@/js/api'
 
-const authStore = useAuthStore();
 
-// Получаем имя пользователя (или логин, если имя отсутствует)
-const login = computed(() => {
-  return authStore.currentUser?.name || authStore.currentUser?.login || 'Гость';
-});
+const user = ref(null)
+
+const load = async () => {
+    try {
+        const userResponse = await axiosDB.get(API_URL + '/user/me')
+        user.value = userResponse.data
+    } catch (error) {
+        user.value = null
+    }
+    console.log("dssd" + user)
+}
+
+const logout = async () => {
+    try {
+        await axiosDB.post(API_URL + '/auth/logout')
+        user.value = null
+        window.location.href = '/login' 
+    } catch (error) {
+        console.error('Ошибка при выходе:', error)
+    }
+}
+
+onMounted(() => {
+  load()
+})
 </script>
 
 <template>
     <nav id="header" class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <router-link to="/" type="submit">
-                <img id="logo" src='../assets/logo.svg' height="50px"/>
-                Электронно-образовательная среда. Общение
-            </router-link>
+            <div v-if="user">
+                <router-link to="/chat" type="submit">
+                    <img id="logo" src='../assets/logo.svg' height="50px"/>
+                    Электронно-образовательная среда. Общение
+                </router-link>
+            </div>
+            <div  v-else>
+                <router-link to="/" type="submit">
+                    <img id="logo" src='../assets/logo.svg' height="50px"/>
+                    Электронно-образовательная среда. Общение
+                </router-link>
+            </div>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <div v-if="authStore.isAuthenticated" class="user-info">
+                    <div v-if="user">
                         <li class="nav-item">
                             <router-link to="/chat" class="auth-link">Чаты</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link to="/profile" class="auth-link">Имя</router-link>
+                            <router-link to="/profile" class="auth-link">{{user.login}}</router-link>
                         </li>
                         <li class="nav-item">
-                            <button @click="authStore.logout()" class="logout-btn">Выйти</button>
+                            <button @click="logout()" class="logout-btn">Выйти</button>
                         </li>
                     </div>
-                    <div v-else class="auth-links">
+                    <div v-else>
                         <li class="nav-item">
                             <router-link to="/login" class="auth-link">Войти </router-link>
                         </li>

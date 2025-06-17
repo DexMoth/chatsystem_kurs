@@ -88,6 +88,7 @@ const deleteChat = async () => {
   }
 }
 
+////----------------- работа с сообщениями
 // удаление сообщения
 const deleteMessage = async (messageId) => {
   if (!confirm('Вы точно хотите удалить сообщение? Это действие нельзя отменить.')) {
@@ -100,6 +101,38 @@ const deleteMessage = async (messageId) => {
     console.error('Ошибка удаления сообщения:', error)
     alert('Не удалось сообщение')
   }
+}
+
+// редактирование сообщений
+const editId = ref(null)
+const ediText = ref('')
+
+const startEditing = (message) => {
+  editId.value = message.id
+  ediText.value = message.text
+}
+
+const saveEditedMessage = async () => {
+  if (!ediText.value.trim()) return
+  
+  try {
+    await axiosDB.put(`${API_URL}/message/${editId.value}`, {
+      text: ediText.value.trim()
+    })
+    
+    //обновляем
+    editId.value = null
+    ediText.value = ''
+    loadData()
+  } catch (error) {
+    console.error('Ошибка редактирования сообщения:', error)
+    alert('Не удалось сохранить изменения')
+  }
+}
+
+const cancelEditing = () => {
+  editId.value = null
+  ediText.value = ''
 }
 
 // Загружаем данные при монтировании и изменении chatId
@@ -136,7 +169,23 @@ watch(() => props.chatId, loadData)
         :class="['message', message.sender === 'me' ? 'my-message' : 'other-message']"
       >
         <div>{{ message.name }}</div>
-        <div class="message-content">
+        
+        <div v-if="editId === message.id" class="editing-message">
+          <textarea
+            v-model="ediText"
+            class="form-control mb-2"
+            rows="2"
+          ></textarea>
+          <div class="d-flex gap-2">
+            <button @click="saveEditedMessage" class="btn btn-sm btn-success">
+              Сохранить
+            </button>
+            <button @click="cancelEditing" class="btn btn-sm btn-secondary">
+              Отмена
+            </button>
+          </div>
+        </div>
+        <div v-else class="message-content">
           <div v-if="message.text">{{ message.text }}</div>
           
           <div v-if="message.attachments.length" class="attachments">
@@ -152,12 +201,11 @@ watch(() => props.chatId, loadData)
           </div>
         </div>
         <div class="message-time">
-          <div v-if="message.sender === 'me'">
-            <router-link :key="chatId" :to="`/chat-edit/${chatId}`">
-              <i class="bi bi-pencil-fill ms-4"></i>
-            </router-link>
+          {{ message.time }}
+          <span v-if="message.sender === 'me'">
+            <i class="bi bi-pencil-fill ms-4" @click.stop="startEditing(message)"></i>
             <a><i class="bi bi-trash-fill ms-2" @click.stop="deleteMessage(message.id)"></i></a>
-          </div>
+          </span>
         </div>
       </div>
     </div>
@@ -222,7 +270,6 @@ watch(() => props.chatId, loadData)
   margin-bottom: 15px;
   max-width: 70%;
 }
-
 .message-content {
   padding: 10px 15px;
   border-radius: 18px;
