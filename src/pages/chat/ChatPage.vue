@@ -13,9 +13,9 @@ const fetchChats = async () => {
   try {
     const responseU = await axiosDB.get(API_URL + '/user/me')
     user.value = responseU.data
+    console.log("fff"+user.value.phone)
 
     const response = await axiosDB.get(`${API_URL}/chat/user/${user.value.id}`)
-    console.log(response.data)
     chats.value = response.data
   } catch (err) {
     console.error('Ошибка загрузки данныъ:', err)
@@ -34,8 +34,10 @@ onMounted(() => {
   <div class="container">
     <div class="row align-items-start">
       <div class="col-3">
+        <div v-if="user?.phone">
         <router-link to="/chat-edit" type="submit" class="btn btn-secondary p-10 mb-4">Создать чат</router-link>
-        
+        </div>
+
         <div v-if="chats.length === 0" class="alert alert-info mt-3">
           У вас пока нет чатов
         </div>

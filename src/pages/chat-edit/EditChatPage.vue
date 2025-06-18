@@ -14,6 +14,7 @@ const chatData = ref({
 const allUsers = ref([])
 const currentMembers = ref([]) // Текущие участники чата
 const selectedUsers = ref([]) // Временный выбор для новых участников
+const invitedUsers = ref([]) // для приглашенных
 const searchQuery = ref('') // Поисковый запрос
 
 // Загрузка данных чата и пользователей
@@ -120,7 +121,7 @@ const sendInvitationEmails = async (userIds, chatName, chatId) => {
 }
 
 // участники чата
-const toggleMember = (userId) => {
+const toggleMember = async (userId) => {
   if (isCurrentMember(userId)) {
     // Удаляем из текущих участников
     currentMembers.value = currentMembers.value.filter(id => id !== userId)
@@ -128,12 +129,19 @@ const toggleMember = (userId) => {
   } else {
     // Добавляем во временный выбор
     const index = selectedUsers.value.indexOf(userId)
+
     if (index === -1) {
       selectedUsers.value.push(userId)
+      invitedUsers.value.push(userId)
     } else {
       selectedUsers.value.splice(index, 1)
+      invitedUsers.value = invitedUsers.value.filter(id => id !== userId)
     }
   }
+}
+
+const isInvited = (userId) => {
+  return invitedUsers.value.includes(userId)
 }
 
 // Проверка является ли пользователь текущим участником
@@ -175,7 +183,7 @@ onMounted(loadData)
         >
           <div class="d-flex align-items-center">
             <img 
-              :src="user.image || '/default-avatar.png'" 
+              :src="user.avatar || '/default-avatar.png'" 
               class="rounded-circle me-3"
               width="40"
               height="40"
@@ -186,10 +194,18 @@ onMounted(loadData)
           <button 
             type="button" 
             class="btn btn-sm"
-            :class="isCurrentMember(user.id) ? 'btn-danger' : 'btn-success'"
+            :class="{
+              'btn-danger': isCurrentMember(user.id),
+              'btn-success': !isCurrentMember(user.id) && !isInvited(user.id),
+              'btn-secondary': isInvited(user.id)
+            }"
             @click.stop="toggleMember(user.id)"
+            :disabled="isInvited(user.id)"
           >
-            {{ isCurrentMember(user.id) ? 'Удалить' : 'Пригласить' }}
+            {{
+              isCurrentMember(user.id) ? 'Удалить' : 
+              isInvited(user.id) ? 'Приглашено' : 'Пригласить'
+            }}
           </button>
         </div>
       </div>
