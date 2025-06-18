@@ -14,29 +14,60 @@ const user = ref(null)
 const newMessage = ref('')
 const selectedFile = ref(null)
 const fileInput = ref(null)
-const userId = ref(null)
 
-// Загрузка данных пользователя и сообщений
+//загрузка сообщений
 const loadData = async () => {
   try {
-    // Загружаем текущего пользователя
-    const userResponse = await axiosDB.get(API_URL + '/user/me')
-    user.value = userResponse.data
+    //текущий пользователь
+    const me = await axiosDB.get(API_URL + '/user/me')
+    user.value = me.data
     
-    // Загружаем сообщения чата
-    const messagesResponse = await axiosDB.get(`${API_URL}/message/chat/${props.chatId}`)
+    //сообщения
+    const response = await axiosDB.get(`${API_URL}/message/chat/${props.chatId}`)
     
-    messages.value = messagesResponse.data.map(msg => ({
-      id: msg.id,
-      name: user.value.name.substring(0, user.value.name.indexOf(" ") + 2),
-      text: msg.text,
-      sender: msg.userId === user.value.id ? 'me' : 'other',
-      time: formatTime(msg.createdAt),
-      attachments: []
-    }))
+    //обрабатываем
+    messages.value = await Promise.all(
+      response.data.map(async (msg) => {
+        const userResponse = await axiosDB.get(`${API_URL}/user/${msg.userId}`)
+        const sender = userResponse.data
+        
+        return {
+          id: msg.id,
+          name: sender.name.substring(0, sender.name.indexOf(" ") + 2),
+          text: msg.text,
+          userId: msg.userId,
+          sender: msg.userId === user.value.id ? 'me' : 'other',
+          time: formatTime(msg.createdAt),
+          isFavorite: msg.favorite,
+          attachments: msg.attachments?.map(file => ({
+            id: file.id,
+            name: file.name,
+            type: file.type,
+            url: generateFileUrl(file), // Используем новую функцию
+            isImage: file.type.startsWith('image/'),
+            isAudio: file.type.startsWith('audio/')
+          })) || []
+        }
+      })
+    )
+    
   } catch (error) {
-    console.error('Ошибка загрузки данных:', error)
+    console.error('Ошибка загрузки:', error)
+    alert('Не удалось загрузить сообщения')
   }
+}
+
+// Генерация URL для файла из base64
+const generateFileUrl = (file) => {
+  if (file.type.startsWith('image/')) {
+    // Если данные уже в формате data:image, возвращаем как есть
+    if (file.data.startsWith('data:')) {
+      return file.data;
+    }
+    // Иначе конвертируем base64 в data URL
+    return `data:${file.type};base64,${file.data}`;
+  }
+  return '#'; // Для не-изображений
 }
 
 // Форматирование времени
@@ -50,19 +81,28 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() && !selectedFile.value) return
   
   try {
-    const messageData = {
+    const messageData = new FormData();
+    messageData.append('dto', new Blob([JSON.stringify({
       chatId: props.chatId,
       userId: user.value.id,
       text: newMessage.value.trim(),
       isFavorite: false
+    })], { type: 'application/json' }));
+
+    if (selectedFile.value) {
+      messageData.append('file', selectedFile.value);
     }
+
+    await axiosDB.post(`${API_URL}/message`, messageData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     
-    const response = await axiosDB.post(`${API_URL}/message`, messageData)
     newMessage.value = ''
     selectedFile.value = null
     fileInput.value.value = ''
     
-    // Перезагружаем сообщения после отправки
     loadData()
   } catch (error) {
     console.error('Ошибка отправки сообщения:', error)
@@ -84,26 +124,25 @@ const deleteChat = async () => {
     window.location.href = '/chat' 
   } catch (error) {
     console.error('Ошибка удаления чата:', error)
-    alert('Не удалось чат')
+    alert('Не удалось удалить чат')
   }
 }
 
 ////----------------- работа с сообщениями
-// удаление сообщения
 const deleteMessage = async (messageId) => {
   if (!confirm('Вы точно хотите удалить сообщение? Это действие нельзя отменить.')) {
     return
   }
   try {
     await axiosDB.delete(`${API_URL}/message/${messageId}`)
-    window.location.reload();
+    loadData()
   } catch (error) {
     console.error('Ошибка удаления сообщения:', error)
-    alert('Не удалось сообщение')
+    alert('Не удалось удалить сообщение')
   }
 }
 
-// редактирование сообщений
+// редактирование
 const editId = ref(null)
 const ediText = ref('')
 
@@ -120,7 +159,6 @@ const saveEditedMessage = async () => {
       text: ediText.value.trim()
     })
     
-    //обновляем
     editId.value = null
     ediText.value = ''
     loadData()
@@ -154,11 +192,11 @@ watch(() => props.chatId, loadData)
                 <i class="bi bi-pencil-fill"></i>
               </button>
             </router-link>
-            <button class="btn btn-light">
-              <i class="bi bi-trash-fill" @click.stop="deleteChat()"></i>
+            <button class="btn btn-light" @click.stop="deleteChat()">
+              <i class="bi bi-trash-fill"></i>
             </button>
           </div>
-          </div>
+        </div>
       </div>
     </div>
 
@@ -168,7 +206,12 @@ watch(() => props.chatId, loadData)
         :key="message.id"
         :class="['message', message.sender === 'me' ? 'my-message' : 'other-message']"
       >
-        <div>{{ message.name }}</div>
+        <div class="message-header">
+          <span class="user-name">{{ message.name }}</span>
+          <span v-if="message.isFavorite" class="favorite-badge ms-2">
+            <i class="bi bi-star-fill text-warning"></i>
+          </span>
+        </div>
         
         <div v-if="editId === message.id" class="editing-message">
           <textarea
@@ -188,15 +231,36 @@ watch(() => props.chatId, loadData)
         <div v-else class="message-content">
           <div v-if="message.text">{{ message.text }}</div>
           
-          <div v-if="message.attachments.length" class="attachments">
-            <div v-for="(file, idx) in message.attachments" :key="idx" class="attachment">
-              <a :href="file.url" target="_blank" class="file-link">
-                <span>Файл: </span>
-                <span class="file-name">{{ file.name }}</span>
-              </a>
-              <div v-if="file.type.startsWith('image/')" class="image-preview">
-                <img :src="file.url" :alt="file.name" class="preview-image">
+          <div v-if="message.attachments.length" class="attachments mt-2">
+            <div v-for="(file, idx) in message.attachments" :key="file.id" class="attachment mb-2">
+              <div class="d-flex align-items-center file-info">
+                <i class="bi" 
+                  :class="{
+                    'bi-file-earmark': !file.isImage && !file.isAudio,
+                    'bi-image': file.isImage,
+                    'bi-file-music': file.isAudio
+                  }">
+                </i>
+                <a :href="file.url" :download="file.name" class="file-link text-decoration-none ms-2">
+                  {{ file.name }}
+                </a>
               </div>
+              
+              <div v-if="file.isImage" class="image-preview mt-2">
+                <img 
+                  :src="file.url" 
+                  :alt="file.name" 
+                  class="preview-image img-thumbnail"
+                  style="max-width: 400px; max-height: 400px; cursor: pointer"
+                >
+              </div>
+              
+              <audio 
+                v-else-if="file.isAudio" 
+                :src="file.url" 
+                controls
+                class="mt-2 w-100"
+              ></audio>
             </div>
           </div>
         </div>
@@ -204,7 +268,7 @@ watch(() => props.chatId, loadData)
           {{ message.time }}
           <span v-if="message.sender === 'me'">
             <i class="bi bi-pencil-fill ms-4" @click.stop="startEditing(message)"></i>
-            <a><i class="bi bi-trash-fill ms-2" @click.stop="deleteMessage(message.id)"></i></a>
+            <i class="bi bi-trash-fill ms-2" @click.stop="deleteMessage(message.id)"></i>
           </span>
         </div>
       </div>
@@ -221,7 +285,7 @@ watch(() => props.chatId, loadData)
               class="form-control"
             >
           </div>
-          <div class="col">
+          <div class="col-auto">
             <button @click="sendMessage" class="btn btn-primary">
               Отправить
             </button>
@@ -235,6 +299,7 @@ watch(() => props.chatId, loadData)
               @change="handleFileSelect" 
               class="form-control" 
               id="inputGroupFile"
+              accept="image/*, audio/*"
             >
           </div>
         </div>
@@ -248,6 +313,7 @@ watch(() => props.chatId, loadData)
   display: flex;
   flex-direction: column;
   height: 90vh;
+  width: 90%;
   border-left: 1px solid #ddd;
   background-color: #f9f9f9;
 }
@@ -267,7 +333,7 @@ watch(() => props.chatId, loadData)
 }
 
 .message {
-  margin-bottom: 15px;
+  margin-bottom: 5px;
   max-width: 70%;
 }
 .message-content {
@@ -278,6 +344,7 @@ watch(() => props.chatId, loadData)
 
 .my-message {
   margin-left: auto;
+  max-width: 80%;
 }
 
 .my-message .message-content {
@@ -302,10 +369,6 @@ watch(() => props.chatId, loadData)
   text-align: right;
 }
 
-.my-message .file-link {
-  background: rgba(255, 255, 255, 0.8);
-}
-
 .message-input {
   display: flex;
   padding: 15px;
@@ -327,5 +390,25 @@ watch(() => props.chatId, loadData)
   max-height: 200px;
   border-radius: 8px;
   border: 1px solid #ddd;
+}
+
+
+.file-link {
+  color: #0d6efd;
+}
+
+.file-link:hover {
+  text-decoration: underline;
+}
+
+
+.preview-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.file-info {
+  padding: 4px;
 }
 </style>

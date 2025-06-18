@@ -3,6 +3,7 @@ import { useAuthStore } from './auth'
 import RegistrationPage from '@/pages/registration/RegistrationPage.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
 import ProfilePage from '@/pages/profile/ProfilePage.vue'
+import ProfileEditPage from '@/pages/profile-edit/ProfileEditPage.vue'
 import ChatPage from '@/pages/chat/ChatPage.vue'
 import EditChatPage from '@/pages/chat-edit/EditChatPage.vue'
 
@@ -28,6 +29,11 @@ const router = createRouter({
         path: '/profile',
         name: 'profile',
         component: ProfilePage
+      },
+      {
+        path: '/profile-edit',
+        name: 'profile-edit',
+        component: ProfileEditPage
       },
       {
         path: '/chat',

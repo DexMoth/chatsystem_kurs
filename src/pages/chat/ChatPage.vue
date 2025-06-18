@@ -30,7 +30,7 @@ onMounted(() => {
   <div class="container">
     <div class="row align-items-start">
       <div class="col-4">
-        <router-link to="/chat-edit" type="submit" class="btn btn-secondary p-10">Создать чат</router-link>
+        <router-link to="/chat-edit" type="submit" class="btn btn-secondary p-10 mb-4">Создать чат</router-link>
         
         <div v-if="chats.length === 0" class="alert alert-info mt-3">
           У вас пока нет чатов
@@ -43,8 +43,8 @@ onMounted(() => {
           :class="{ 'active-chat': route.params.id === chat.id.toString() }"
         >
           <ChatElement 
+            :id="chat.id"
             :name="chat.name"
-            :image="chat.image"
             :is-active="route.params.id === chat.id.toString()"
           />
         </router-link>

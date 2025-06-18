@@ -1,10 +1,10 @@
 <script setup>
 defineProps({
-  name: {
+  id: {
     type: String,
     required: true
   },
-  image: {
+  name: {
     type: String,
     required: true
   }
@@ -15,8 +15,8 @@ defineProps({
   <button type="button" class="btn btn-light chat-button">
     <div class="container chat-element">
         <div class="row align-items-start g-0">
-            <div class="col-auto image-col">
-                <img :src="image" :alt="name" class="chat-image" height="50px" width="50px">
+          <div class="col-auto">
+                <p class="chat-name">чат#{{ id }}</p>
             </div>
             <div class="col text-col">
                 <p class="chat-name">{{ name }}</p>
