@@ -28,46 +28,31 @@ const fetchUserData = async () => {
 onMounted(() => {
   fetchUserData()
 })
-
-// defineProps({
-//   user: {
-//     type: Object,
-//     required: true,
-//     default: () => ({
-//       name: 'Иван Иванов',
-//       email: 'ivan@example.com',
-//       phone: '+7 (123) 456-78-90',
-//       studentId: '12345678',
-//       avatar: 'https://i.pinimg.com/736x/a9/57/98/a957983394246f57439920cb836e2d45.jpg',
-//       faculty: 'Информационные технологии',
-//       course: '3 курс',
-//       group: 'ИТ-301'
-//     })
-//   }
-// })
 </script>
 
 <template>
-    <div class="profile-card">
-        <div class="profile-header">
-            <img :src="user.avatar" alt="Аватар" class="profile-avatar">
-            <h2 class="profile-name">{{ user.name }}</h2>
-            <p class="profile-login">{{ user.login }}</p>
-            </div>
-            <div class="profile-details">
-              <div class="detail-item">
-                  <i class="bi bi-telephone"></i>
-                  <span>{{ user.phone }}</span>
-              </div>
-              <div class="detail-item">
-                  <i class="bi bi-person-badge"></i>
-                  <span>Студенческий билет: {{ user.reportCardNumber }}</span>
-              </div>
-            </div>
-            <button class="btn btn-edit">
-            <i class="bi bi-pencil"></i> Редактировать профиль
-        </button>
-  </div>
+  <div class="profile-card">
+    <div class="profile-header">
+      <img :src="user.avatar" alt="Аватар" class="profile-avatar">
+      <h2 class="profile-name">{{ user.name }}</h2>
+      <p class="profile-login">{{ user.login }}</p>
+    </div>
+    <div class="profile-details">
+      <div class="detail-item">
+        <i class="bi bi-telephone"></i>
+        <span>Телефон: {{ user.phone }}</span>
+      </div>
+      <div class="detail-item">
+        <i class="bi bi-person-badge"></i>
+        <span>Студенческий билет: {{ user.reportCardNumber }}</span>
+      </div>
+    </div>
+    <router-link to="/profile-edit">
+      <button class="btn btn-edit">
+        <i class="bi bi-pencil"></i>Редактировать профиль
+      </button>
+    </router-link>
+</div>
 </template>
 
 <style scoped>

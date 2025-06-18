@@ -1,11 +1,11 @@
 <script setup>
-import ProfileWindow from './components/ProfileWindow.vue';
+import ProfileEditWindow from './components/ProfileEditWindow.vue';
 </script>
 
 <template>
   <div class="registration-page">
     <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <ProfileWindow></ProfileWindow>
+      <ProfileEditWindow></ProfileEditWindow>
     </div>
   </div>
 </template>

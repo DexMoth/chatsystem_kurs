@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import UserElement from './components/UserElement.vue'
 import { API_URL, axiosDB } from '@/js/api'
 
 const route = useRoute()
+const user = ref(null)
 const chatId = route.params.id
 const chatData = ref({
   name: '',
@@ -13,6 +14,7 @@ const chatData = ref({
 const allUsers = ref([])
 const currentMembers = ref([]) // Текущие участники чата
 const selectedUsers = ref([]) // Временный выбор для новых участников
+const searchQuery = ref('') // Поисковый запрос
 
 // Загрузка данных чата и пользователей
 const loadData = async () => {
@@ -32,19 +34,41 @@ const loadData = async () => {
   }
 }
 
+// Фильтрация пользователей по поисковому запросу
+const filteredUsers = computed(() => {
+  if (!searchQuery.value) return allUsers.value
+  const query = searchQuery.value.toLowerCase()
+  return allUsers.value.filter(user => 
+    user.name.toLowerCase().includes(query)
+  )
+})
+
 // Отправка формы
 const submitForm = async () => {
   try {
+    // загрузка себя
+    const me = await axiosDB.get(API_URL + '/user/me')
+    user.value = me.data
+
     const data = {
       name: chatData.value.name,
-      memberIds: [...currentMembers.value, ...selectedUsers.value]
+      memberIds: [...currentMembers.value, user.value.id]
     }
-    
+
+    let response;
     if (chatId) {
-      await axiosDB.put(`${API_URL}/chat/${chatId}`, data)
+      response = await axiosDB.put(`${API_URL}/chat/${chatId}`, data)
     } else {
-      await axiosDB.post(`${API_URL}/chat`, data)
+      response = await axiosDB.post(`${API_URL}/chat`, data)
     }
+
+    console.log("ergere")
+    // Отправка писем новым участникам
+    await sendInvitationEmails(
+      selectedUsers.value, 
+      chatData.value.name, 
+      response.data.id
+    )
     
     window.history.back()
   } catch (error) {
@@ -52,7 +76,50 @@ const submitForm = async () => {
   }
 }
 
-// Управление участниками
+// ------------------- работа с участниками
+// отправить емейл приглашение
+const sendInvitationEmails = async (userIds, chatName, chatId) => {
+  try {
+    // Получаем email текущего пользователя (кто создает чат)
+    const me = await axiosDB.get(API_URL + '/user/me')
+    const inviterName = me.data.name
+    
+    // Собираем emails всех приглашенных пользователей
+    const emails = []
+    
+    // Для каждого пользователя делаем отдельный запрос
+    for (const userId of userIds) {
+      try {
+        const userResponse = await axiosDB.get(`${API_URL}/user/${userId}`)
+        if (userResponse.data?.login) {
+          emails.push(userResponse.data.login)
+        }
+      } catch (err) {
+        console.error(`Ошибка получения данных пользователя ${userId}:`, err)
+      }
+    }
+    
+    // Отправляем один запрос на сервер для рассылки писем
+    if (emails.length > 0) {
+      await axiosDB.post(`${API_URL}/notification/chat-invite`, {
+        chatId,
+        chatName,
+        recipientEmails: emails,
+        inviterName
+      })
+
+      alert(`Приглашения отправлены ${emails.length} участникам`)
+    } else {
+      console.log('Нет email-адресов для отправки приглашений')
+    }
+    
+  } catch (error) {
+    console.error('Ошибка отправки уведомлений:', error)
+    alert('Не удалось отправить приглашения')
+  }
+}
+
+// участники чата
 const toggleMember = (userId) => {
   if (isCurrentMember(userId)) {
     // Удаляем из текущих участников
@@ -93,9 +160,15 @@ onMounted(loadData)
     
     <div class="mb-3">
       <label class="form-label">Участники:</label>
+      <input 
+        v-model="searchQuery" 
+        class="form-control mb-3" 
+        id="find"
+        placeholder="Поиск по имени..."
+      >
       <div id="listUsers" class="user-list">
         <div 
-          v-for="user in allUsers" 
+          v-for="user in filteredUsers" 
           :key="user.id"
           class="user-item d-flex align-items-center justify-content-between p-2"
           :class="{ 'bg-light': isCurrentMember(user.id) }"
@@ -121,7 +194,6 @@ onMounted(loadData)
         </div>
       </div>
     </div>
-    
     <button type="submit" class="btn btn-primary mt-3">
       {{ chatId ? 'Сохранить изменения' : 'Создать чат' }}
     </button>

@@ -12,8 +12,9 @@ const props = defineProps({
 const messages = ref([])
 const user = ref(null)
 const newMessage = ref('')
-const selectedFile = ref(null)
+const selectedFiles = ref([])
 const fileInput = ref(null)
+const MAX_FILES = 10 
 
 //загрузка сообщений
 const loadData = async () => {
@@ -25,35 +26,70 @@ const loadData = async () => {
     //сообщения
     const response = await axiosDB.get(`${API_URL}/message/chat/${props.chatId}`)
     
-    //обрабатываем
+    // Обрабатываем разные форматы ответа
+    let messagesData = []
+    
+    if (response.data === null || response.data === undefined) {
+      console.log('Нет сообщений (null/undefined)')
+      messages.value = []
+      return
+    }
+    
+    if (Array.isArray(response.data)) {
+      if (response.data.length === 0) {
+        console.log('Получен пустой массив сообщений')
+        messages.value = []
+      } else if (response.data.length === 1) {
+        console.log('Получено 1 сообщение')
+        messagesData = response.data
+      } else {
+        console.log(`Получено ${response.data.length} сообщений`)
+        messagesData = response.data
+      }
+    } else if (typeof response.data === 'object' && response.data.id) { 
+      // Если пришло одно сообщение как объект
+      console.log('Получено 1 сообщение (в виде объекта)')
+      messagesData = [response.data]
+    } else {
+      console.error('Неизвестный формат сообщений:', response.data)
+      messages.value = []
+      return
+    }
+    
+    // Обрабатываем сообщения
     messages.value = await Promise.all(
-      response.data.map(async (msg) => {
-        const userResponse = await axiosDB.get(`${API_URL}/user/${msg.userId}`)
-        const sender = userResponse.data
-        
-        return {
-          id: msg.id,
-          name: sender.name.substring(0, sender.name.indexOf(" ") + 2),
-          text: msg.text,
-          userId: msg.userId,
-          sender: msg.userId === user.value.id ? 'me' : 'other',
-          time: formatTime(msg.createdAt),
-          isFavorite: msg.favorite,
-          attachments: msg.attachments?.map(file => ({
-            id: file.id,
-            name: file.name,
-            type: file.type,
-            url: generateFileUrl(file), // Используем новую функцию
-            isImage: file.type.startsWith('image/'),
-            isAudio: file.type.startsWith('audio/')
-          })) || []
+      messagesData.map(async (msg) => {
+        try {
+          const userResponse = await axiosDB.get(`${API_URL}/user/${msg.userId}`)
+          const sender = userResponse.data
+          
+          return {
+            id: msg.id,
+            name: sender.name.substring(0, sender.name.indexOf(" ") + 2),
+            text: msg.text,
+            userId: msg.userId,
+            sender: msg.userId === user.value.id ? 'me' : 'other',
+            time: formatTime(msg.createdAt),
+            isFavorite: msg.favorite,
+            attachments: msg.attachments?.map(file => ({
+              id: file.id,
+              name: file.name,
+              type: file.type,
+              url: generateFileUrl(file),
+              isImage: file.type.startsWith('image/'),
+              isAudio: file.type.startsWith('audio/')
+            })) || []
+          }
+        } catch (err) {
+          console.error(`Ошибка загрузки данных пользователя ${msg.userId}:`, err)
+          return null
         }
       })
     )
     
   } catch (error) {
     console.error('Ошибка загрузки:', error)
-    alert('Не удалось загрузить сообщения')
+    //alert('Не удалось загрузить сообщения')
   }
 }
 
@@ -78,40 +114,59 @@ const formatTime = (dateString) => {
 
 // Отправка сообщения
 const sendMessage = async () => {
-  if (!newMessage.value.trim() && !selectedFile.value) return
+  if (!newMessage.value.trim() && selectedFiles.value.length === 0) return
   
   try {
-    const messageData = new FormData();
+    const messageData = new FormData()
     messageData.append('dto', new Blob([JSON.stringify({
       chatId: props.chatId,
       userId: user.value.id,
       text: newMessage.value.trim(),
       isFavorite: false
-    })], { type: 'application/json' }));
+    })], { type: 'application/json' }))
 
-    if (selectedFile.value) {
-      messageData.append('file', selectedFile.value);
-    }
+    // Добавляем все выбранные файлы
+    selectedFiles.value.forEach((file, index) => {
+      messageData.append(`files`, file)
+      console.log(file)
+    })
 
     await axiosDB.post(`${API_URL}/message`, messageData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
-    });
+    })
     
+    // Сбрасываем форму
     newMessage.value = ''
-    selectedFile.value = null
+    selectedFiles.value = []
     fileInput.value.value = ''
     
+    // Обновляем список сообщений
     loadData()
   } catch (error) {
     console.error('Ошибка отправки сообщения:', error)
+    alert('Не удалось отправить сообщение')
   }
 }
 
-// Обработка выбора файла
+// ообработка выбора файлов
 const handleFileSelect = (event) => {
-  selectedFile.value = event.target.files[0]
+  const files = Array.from(event.target.files)
+  
+  if (files.length > MAX_FILES) {
+    alert(`Максимальное количество файлов: ${MAX_FILES}`)
+    event.target.value = ''
+    return
+  }
+  
+  selectedFiles.value = files.slice(0, MAX_FILES)
+}
+
+// удаление файла из списка
+const removeFile = (index) => {
+  selectedFiles.value.splice(index, 1)
+  fileInput.value.value = ''
 }
 
 // удаление чата
@@ -187,7 +242,7 @@ watch(() => props.chatId, loadData)
             <h4>Чат #{{ chatId }}</h4>
           </div>
           <div class="col-auto">
-            <router-link :key="chatId" :to="`/chat-edit/${chatId}`">
+            <router-link :key="chatId" :to="`/chat-edit/${chatId}`" class="me-2">
               <button class="btn btn-light">
                 <i class="bi bi-pencil-fill"></i>
               </button>
@@ -254,13 +309,6 @@ watch(() => props.chatId, loadData)
                   style="max-width: 400px; max-height: 400px; cursor: pointer"
                 >
               </div>
-              
-              <audio 
-                v-else-if="file.isAudio" 
-                :src="file.url" 
-                controls
-                class="mt-2 w-100"
-              ></audio>
             </div>
           </div>
         </div>
@@ -291,15 +339,16 @@ watch(() => props.chatId, loadData)
             </button>
           </div>
         </div>
-        <div class="row align-items-start g-0">
+        <!-- выбор файлов -->
+        <div class="row align-items-start g-0 mb-2">
           <div class="input-group">
             <input 
               type="file" 
               ref="fileInput"
               @change="handleFileSelect" 
               class="form-control" 
-              id="inputGroupFile"
-              accept="image/*, audio/*"
+              multiple
+              accept="image/*, audio/*, .pdf, .doc, .docx, .xls, .xlsx"
             >
           </div>
         </div>
@@ -309,6 +358,32 @@ watch(() => props.chatId, loadData)
 </template>
 
 <style scoped>
+.selected-files {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.file-item {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.file-info {
+  margin-left: 10px;
+}
+
+.file-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.file-size {
+  color: #6c757d;
+}
+
 .chat-window {
   display: flex;
   flex-direction: column;
@@ -394,13 +469,13 @@ watch(() => props.chatId, loadData)
 
 
 .file-link {
-  color: #0d6efd;
+  color: #eee;
+  text-decoration: underline;
 }
 
 .file-link:hover {
   text-decoration: underline;
 }
-
 
 .preview-image {
   max-width: 100%;

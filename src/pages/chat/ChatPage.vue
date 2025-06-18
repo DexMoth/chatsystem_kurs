@@ -7,10 +7,14 @@ import { API_URL, axiosDB } from '@/js/api'
 
 const route = useRoute() // Получаем текущий маршрут
 const chats = ref([])
+const user = ref()
 
 const fetchChats = async () => {
   try {
-    const response = await axiosDB.get(`${API_URL}/chat`)
+    const responseU = await axiosDB.get(API_URL + '/user/me')
+    user.value = responseU.data
+
+    const response = await axiosDB.get(`${API_URL}/chat/user/${user.value.id}`)
     console.log(response.data)
     chats.value = response.data
   } catch (err) {
@@ -29,7 +33,7 @@ onMounted(() => {
 <template>
   <div class="container">
     <div class="row align-items-start">
-      <div class="col-4">
+      <div class="col-3">
         <router-link to="/chat-edit" type="submit" class="btn btn-secondary p-10 mb-4">Создать чат</router-link>
         
         <div v-if="chats.length === 0" class="alert alert-info mt-3">

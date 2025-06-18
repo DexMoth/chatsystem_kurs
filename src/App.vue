@@ -5,7 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 </script>
 
 <template>
-  <Header/>
+  <Header></Header>
   <div id="main">
     <RouterView />
   </div>
@@ -24,8 +24,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 }
 
 #main {
-  padding: 0px 10%;
-  padding-top: 20px;
+  padding: 0px 0%;
+  padding-top: 30px;
   flex-grow: 1
 }
 

@@ -35,37 +35,35 @@ onMounted(() => {
         <div class="container-fluid">
             <div v-if="user">
                 <router-link to="/chat" type="submit">
-                    <img id="logo" src='../assets/logo.svg' height="50px"/>
+                    <img id="logo" src='../assets/logo.svg' height="20px"/>
                     Электронно-образовательная среда. Общение
                 </router-link>
             </div>
             <div  v-else>
                 <router-link to="/" type="submit">
-                    <img id="logo" src='../assets/logo.svg' height="50px"/>
+                    <img id="logo" src='../assets/logo.svg' height="30px"/>
                     Электронно-образовательная среда. Общение
                 </router-link>
             </div>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <div v-if="user">
-                        <li class="nav-item">
-                            <router-link to="/chat" class="auth-link">Чаты</router-link>
-                        </li>
-                        <li class="nav-item">
-                            <router-link to="/profile" class="auth-link">{{user.login}}</router-link>
-                        </li>
-                        <li class="nav-item">
-                            <button @click="logout()" class="logout-btn">Выйти</button>
-                        </li>
-                    </div>
-                    <div v-else>
-                        <li class="nav-item">
-                            <router-link to="/login" class="auth-link">Войти </router-link>
-                        </li>
-                        <li class="nav-item">
-                            <router-link to="/register" class="auth-link">Регистрация</router-link>
-                        </li>
-                    </div>
+                <ul class="navbar-nav ms-auto" v-if="user">
+                    <li class="nav-link ">
+                        <router-link to="/chat">Чаты</router-link>
+                    </li>
+                    <li class="nav-link ">
+                        <router-link to="/profile">{{user.login}}</router-link>
+                    </li>
+                    <li class="nav-link ">
+                        <button @click="logout()">Выйти</button>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto" v-else>
+                    <li class="nav-link ">
+                        <router-link to="/login">Войти </router-link>
+                    </li>
+                    <li class="nav-link ">
+                        <router-link to="/register">Регистрация</router-link>
+                    </li>
                 </ul>
             </div>
         </div>
