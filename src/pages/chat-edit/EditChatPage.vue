@@ -123,6 +123,7 @@ const sendInvitationEmails = async (userIds, chatName, chatId) => {
 // участники чата
 const toggleMember = async (userId) => {
   if (isCurrentMember(userId)) {
+    await axiosDB.delete(`${API_URL}/chat/${chatId}/members/${userId}`);
     // Удаляем из текущих участников
     currentMembers.value = currentMembers.value.filter(id => id !== userId)
     alert('Вы удалили участника')

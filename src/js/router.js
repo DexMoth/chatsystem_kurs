@@ -6,6 +6,7 @@ import ProfilePage from '@/pages/profile/ProfilePage.vue'
 import ProfileEditPage from '@/pages/profile-edit/ProfileEditPage.vue'
 import ChatPage from '@/pages/chat/ChatPage.vue'
 import EditChatPage from '@/pages/chat-edit/EditChatPage.vue'
+import ConfirmPage from '@/pages/confirm/ConfirmPage.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,6 +57,11 @@ const router = createRouter({
         name: 'editChat2',
         component: EditChatPage
       },
+      {
+        path: '/join-chat/:chatId',
+        name: 'join-chat',
+        component: ConfirmPage
+      }
     ]
 })
 
