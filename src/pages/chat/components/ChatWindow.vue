@@ -241,7 +241,7 @@ watch(() => props.chatId, loadData)
           <div class="col">
             <h4>Чат #{{ chatId }}</h4>
           </div>
-          <div class="col-auto">
+          <div v-if="user?.phone" class="col-auto">
             <router-link :key="chatId" :to="`/chat-edit/${chatId}`" class="me-2">
               <button class="btn btn-light">
                 <i class="bi bi-pencil-fill"></i>

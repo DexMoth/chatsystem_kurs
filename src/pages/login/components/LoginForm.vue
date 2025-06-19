@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted  } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_URL, axiosDB } from '@/js/api'
 import { useAuthStore } from '@/js/auth';
@@ -9,6 +9,8 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 
+const user = ref(null)
+
 const form = ref({
   login: '',
   password: '',
@@ -17,6 +19,20 @@ const form = ref({
 const errors = ref({
   login: '',
   password: '',
+})
+
+onMounted(async () => {
+  try {
+    const me = await axiosDB.get(API_URL + '/user/me')
+    user.value = me.data
+    const userId = user.value.id;
+
+    if (userId) {
+      throw new Error('Требуется авторизация');
+    }
+  } catch (error) {
+    router.push(`/chat`);
+  }
 })
 
 const validate = () => {
