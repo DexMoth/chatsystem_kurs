@@ -1,20 +1,16 @@
 # chatsystem
+Стек технологий: Java, Spring Boot, Vue.js, Vite, JavaScript, PostgreSQL
+Веб-приложение «Учебный чат» для обмена сообщений между студентами и преподавателями. Главные функции:
+- авторизация пользователей
+- стандартный интерфейс чата
+- обмен сообщениями
+- прикрепление до 10 файлов к сообщению
+- показ превью для изображений
+- приглашение пользователя в чат (с отправкой пригласительного письма на емайл).
 
-This template should help get you started developing with Vue 3 in Vite.
+https://github.com/DexMoth/chatsystem_kurs_server
+https://github.com/DexMoth/chatsystem_kurs
 
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
 
 ### Compile and Hot-Reload for Development
 
